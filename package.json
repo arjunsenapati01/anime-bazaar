@@ -2,10 +2,10 @@
   "name": "wholesale-action-nook",
   "version": "1.0.0",
   "description": "Wholesale Action Nook E-commerce Store",
-  "main": "server.js",
+  "main": "local-dev-server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node local-dev-server.js",
+    "dev": "node local-dev-server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
