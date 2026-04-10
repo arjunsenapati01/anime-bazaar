@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Bazaar — Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+        /* ===== LOGIN SCREEN ===== */
+        #loginScreen {
+            display: flex; position: fixed; inset: 0;
+            justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            z-index: 9999;
+        }
+        .login-box {
+            background: white; border-radius: 20px; padding: 48px 40px;
+            width: 380px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        }
+        .login-box h1 { font-size: 28px; margin-bottom: 6px; color: var(--text); }
+        .login-box p { color: var(--muted); margin-bottom: 30px; font-size: 14px; }
+        .login-box input {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+            border-radius: 10px; font-size: 15px; margin-bottom: 14px;
+            outline: none; transition: border 0.2s;
+        }
+        .login-box input:focus { border-color: var(--primary); }
+        .login-btn {
+            width: 100%; padding: 13px; background: var(--primary); color: white;
+            border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
+        }
+        .login-btn:hover { background: var(--primary-dark); }
+        .login-error { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+        .login-lock { font-size: 52px; margin-bottom: 16px; }
+
+        /* ===== MAIN ADMIN LAYOUT ===== */
+        #adminPanel { display: none; min-height: 100vh; }
+
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--primary);
+            padding: 16px 32px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 12px rgba(99,102,241,0.4);
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; }
+        .nav-brand h1 { color: white; font-size: 20px; font-weight: 800; }
+        .nav-brand span { background: rgba(255,255,255,0.2); color: white; padding: 2px 10px; border-radius: 20px; font-size: 12px; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        .btn { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-white { background: white; color: var(--primary); }
+        .btn-white:hover { background: #f0f0ff; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .container { max-width: 1300px; margin: 0 auto; padding: 30px 24px; }
+
+        /* ===== STATS CARDS ===== */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card {
+            background: var(--card); border-radius: 14px; padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex; align-items: center; gap: 16px;
+        }
+        .stat-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .stat-icon.blue { background: #ede9fe; color: var(--primary); }
+        .stat-icon.green { background: #d1fae5; color: var(--success); }
+        .stat-icon.orange { background: #fef3c7; color: var(--warning); }
+        .stat-icon.red { background: #fee2e2; color: var(--danger); }
+        .stat-val { font-size: 26px; font-weight: 800; color: var(--text); }
+        .stat-label { font-size: 13px; color: var(--muted); }
+
+        /* ===== TOOLBAR ===== */
+        .toolbar {
+            background: var(--card); border-radius: 14px; padding: 18px 24px;
+            margin-bottom: 24px; display: flex; gap: 12px; align-items: center;
+            flex-wrap: wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .toolbar input, .toolbar select {
+            padding: 9px 14px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s;
+        }
+        .toolbar input:focus, .toolbar select:focus { border-color: var(--primary); }
+        .toolbar input { flex: 1; min-width: 200px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+
+        /* ===== ORDERS TABLE ===== */
+        .orders-card { background: var(--card); border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+        .orders-card table { width: 100%; border-collapse: collapse; }
+        .orders-card th {
+            background: #f8fafc; padding: 14px 16px; text-align: left;
+            font-size: 12px; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+        .orders-card td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+        .orders-card tr:last-child td { border-bottom: none; }
+        .orders-card tr:hover td { background: #f8fafc; }
+
+        .order-id { font-family: monospace; font-weight: 700; color: var(--primary); font-size: 13px; }
+        .customer-name { font-weight: 700; }
+        .customer-info { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 700;
+        }
+        .badge-new { background: #dbeafe; color: #1d4ed8; }
+        .badge-processing { background: #fef3c7; color: #92400e; }
+        .badge-shipped { background: #d1fae5; color: #065f46; }
+        .badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+        .items-list { font-size: 12px; color: var(--muted); max-width: 200px; }
+        .items-list div { margin-bottom: 3px; }
+
+        .total-price { font-weight: 800; color: var(--primary); font-size: 16px; }
+
+        .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+
+        .empty-state { text-align: center; padding: 80px 20px; color: var(--muted); }
+        .empty-state i { font-size: 52px; margin-bottom: 16px; color: #cbd5e1; }
+
+        /* ===== ORDER DETAIL MODAL ===== */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 5000; justify-content: center; align-items: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: white; border-radius: 18px; padding: 36px;
+            width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2); position: relative;
+        }
+        .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #888; }
+        .detail-row { display: flex; gap: 8px; margin-bottom: 10px; font-size: 14px; }
+        .detail-label { font-weight: 700; color: var(--muted); width: 110px; flex-shrink: 0; }
+        .detail-val { color: var(--text); }
+        .detail-items-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .detail-items-table th, .detail-items-table td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 13px; text-align: left; }
+        .detail-items-table th { background: #f8fafc; font-weight: 700; color: var(--muted); }
+        .section-title { font-size: 16px; font-weight: 800; margin: 20px 0 10px; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+
+
+        /* Margin Control Panel */
+        .margin-panel {
+            background: var(--card); border-radius: 14px; padding: 24px;
+            margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .margin-panel h3 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+        .margin-panel p { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+        .margin-options { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .margin-btn {
+            padding: 9px 20px; border: 2px solid var(--border); border-radius: 8px;
+            background: white; font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: 0.2s; color: var(--text);
+        }
+        .margin-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .margin-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .margin-custom-wrap { display: flex; gap: 8px; align-items: center; }
+        .margin-custom-wrap input {
+            width: 80px; padding: 9px 12px; border: 2px solid var(--border);
+            border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; outline: none;
+        }
+        .margin-custom-wrap input:focus { border-color: var(--primary); }
+        .margin-apply-btn {
+            padding: 9px 18px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;
+        }
+        .margin-apply-btn:hover { background: var(--primary-dark); }
+        .margin-live-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #d1fae5; color: #065f46; padding: 6px 14px;
+            border-radius: 20px; font-size: 13px; font-weight: 700; margin-left: 10px;
+        }
+        @media (max-width: 768px) {
+            nav { padding: 12px 16px; }
+            .container { padding: 16px; }
+            .orders-card { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+    <div class="login-box">
+        <div class="login-lock">🔐</div>
+        <h1>Admin Panel</h1>
+        <p>Anime Bazaar — Secure Access</p>
+        <input type="text" id="loginUser" placeholder="Username" value="">
+        <input type="password" id="loginPass" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
+        <button class="login-btn" onclick="doLogin()">Sign In</button>
+        <div class="login-error" id="loginError">❌ Invalid username or password.</div>
+    </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div id="adminPanel">
+    <nav>
+        <div class="nav-brand">
+            <h1>🎌 Anime Bazaar Admin</h1>
+            <span>Dashboard</span>
+        </div>
+        <div class="nav-actions">
+            <a href="index.html" target="_blank"><button class="btn btn-white"><i class="fa-solid fa-store"></i> View Store</button></a>
+            <button class="btn btn-white" onclick="exportAllCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+            <button class="btn btn-danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Old Orders Warning Banner -->
+        <div id="old-orders-banner" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:12px;padding:16px 20px;margin-bottom:20px;align-items:center;gap:16px;flex-wrap:wrap;">
+            <span style="font-size:20px;">⚠️</span>
+            <div style="flex:1;">
+                <strong>Some orders were placed before image support was added</strong> — these orders will show blank image boxes in the PDF. 
+                Clear them and place a fresh test order to see images working correctly.
+            </div>
+            <button onclick="clearAllOrders()" style="padding:8px 18px;background:#ef4444;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Clear Old Orders</button>
+            <button onclick="this.closest('#old-orders-banner').style.display='none'" style="padding:8px 12px;background:none;border:none;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+
+        <!-- Price Margin Control -->
+        <div class="margin-panel">
+            <h3>💰 Price Margin Control</h3>
+            <p>Set a profit margin %. All product prices on the store will update automatically for customers.</p>
+            <div class="margin-options">
+                <button class="margin-btn" onclick="setMargin(0)">Original</button>
+                <button class="margin-btn" onclick="setMargin(2)">+2%</button>
+                <button class="margin-btn" onclick="setMargin(5)">+5%</button>
+                <button class="margin-btn" onclick="setMargin(10)">+10%</button>
+                <button class="margin-btn" onclick="setMargin(15)">+15%</button>
+                <button class="margin-btn" onclick="setMargin(20)">+20%</button>
+                <button class="margin-btn" onclick="setMargin(25)">+25%</button>
+                <button class="margin-btn" onclick="setMargin(30)">+30%</button>
+                <div class="margin-custom-wrap">
+                    <input type="number" id="customMarginInput" placeholder="%" min="0" max="200">
+                    <button class="margin-apply-btn" onclick="applyCustomMargin()">Apply</button>
+                </div>
+                <span class="margin-live-badge">
+                    <i class="fa-solid fa-circle" style="font-size:8px;color:#10b981;"></i>
+                    Live: <span id="currentMarginLabel">0% (Original)</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-bag-shopping"></i></div>
+                <div><div class="stat-val" id="statTotal">0</div><div class="stat-label">Total Orders</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                <div><div class="stat-val" id="statRevenue">₹0</div><div class="stat-label">Total Revenue</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div>
+                <div><div class="stat-val" id="statNew">0</div><div class="stat-label">New Orders</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <div><div class="stat-val" id="statItems">0</div><div class="stat-label">Total Items Sold</div></div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="text" id="searchOrders" placeholder="🔍  Search by name, phone, order ID..." oninput="renderOrders()">
+            <select id="filterStatus" onchange="renderOrders()">
+                <option value="">All Status</option>
+                <option value="New">New</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="btn btn-danger" onclick="clearAllOrders()"><i class="fa-solid fa-trash"></i> Clear All</button>
+        </div>
+
+        <!-- Orders -->
+        <div class="orders-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersBody"></tbody>
+            </table>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <i class="fa-solid fa-inbox"></i>
+                <div style="font-size:18px;font-weight:700;margin-bottom:8px;">No orders yet</div>
+                <div>Orders placed on the store will appear here automatically.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ORDER DETAIL MODAL ===== -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeDetail()">×</button>
+        <div id="detailContent"></div>
+    </div>
+</div>
+
+<script>
+// ===== CONFIG — CHANGE PASSWORD HERE =====
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'animebazaar2024';
+// =========================================
+
+const API = '/api/orders';
+let _cachedOrders = null; // in-memory cache after first load
+
+function doLogin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if(u === ADMIN_USER && p === ADMIN_PASS) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadDashboard();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+function doLogout() {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').style.display = 'none';
+}
+
+async function fetchOrders() {
+    const r = await fetch(API);
+    _cachedOrders = await r.json();
+    return _cachedOrders;
+}
+function getOrders() { return _cachedOrders || []; }
+
+async function loadDashboard() {
+    loadMarginUI();
+    const orders = await fetchOrders();
+    const hasOldOrders = orders.some(o => o.items && o.items.some(i => !i.img));
+    if(hasOldOrders) {
+        const banner = document.getElementById('old-orders-banner');
+        if(banner) banner.style.display = 'flex';
+    }
+    const totalRevenue = orders.reduce((s, o) => s + parseFloat(o.cartTotal || 0), 0);
+    const newCount = orders.filter(o => o.status === 'New').length;
+    const totalItems = orders.reduce((s, o) => s + o.items.reduce((si, i) => si + i.qty, 0), 0);
+
+    document.getElementById('statTotal').innerText = orders.length;
+    document.getElementById('statRevenue').innerText = '₹' + totalRevenue.toFixed(0);
+    document.getElementById('statNew').innerText = newCount;
+    document.getElementById('statItems').innerText = totalItems;
+
+    renderOrders();
+}
+
+function renderOrders() {
+    const q = document.getElementById('searchOrders').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value;
+    let orders = getOrders();
+
+    if(q) {
+        orders = orders.filter(o =>
+            o.id.toLowerCase().includes(q) ||
+            o.customer.name.toLowerCase().includes(q) ||
+            o.customer.phone.includes(q)
+        );
+    }
+    if(statusFilter) {
+        orders = orders.filter(o => o.status === statusFilter);
+    }
+
+    const tbody = document.getElementById('ordersBody');
+    const empty = document.getElementById('emptyState');
+
+    if(orders.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = orders.map((o, idx) => {
+        const itemSummary = o.items.slice(0, 3).map(i => `<div>• ${i.title} (x${i.qty})</div>`).join('') +
+            (o.items.length > 3 ? `<div style="color:#6366f1">+${o.items.length - 3} more</div>` : '');
+
+        const badgeClass = {
+            'New': 'badge-new',
+            'Processing': 'badge-processing',
+            'Shipped': 'badge-shipped',
+            'Cancelled': 'badge-cancelled'
+        }[o.status] || 'badge-new';
+
+        const allOrders = getOrders();
+        const realIdx = allOrders.findIndex(x => x.id === o.id);
+
+        return `
+        <tr>
+            <td><span class="order-id">${o.id}</span></td>
+            <td style="font-size:12px;color:var(--muted);">${o.date}</td>
+            <td>
+                <div class="customer-name">${o.customer.name}</div>
+                <div class="customer-info"><i class="fa-solid fa-phone" style="font-size:10px;"></i> ${o.customer.phone}</div>
+                ${o.customer.email ? `<div class="customer-info"><i class="fa-solid fa-envelope" style="font-size:10px;"></i> ${o.customer.email}</div>` : ''}
+            </td>
+            <td><div class="items-list">${itemSummary}</div></td>
+            <td><span class="total-price">₹${o.cartTotal}</span></td>
+            <td>
+                <select class="badge ${badgeClass}" onchange="updateStatus('${o.id}', this.value)" style="border:none;cursor:pointer;font-weight:700;">
+                    <option ${o.status==='New'?'selected':''}>New</option>
+                    <option ${o.status==='Processing'?'selected':''}>Processing</option>
+                    <option ${o.status==='Shipped'?'selected':''}>Shipped</option>
+                    <option ${o.status==='Cancelled'?'selected':''}>Cancelled</option>
+                </select>
+            </td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn btn-primary btn-sm" onclick="viewOrder('${o.id}')"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-success btn-sm" onclick="printOrder('${o.id}')"><i class="fa-solid fa-print"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.id}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function updateStatus(orderId, newStatus) {
+    fetch(API, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+    }).then(() => loadDashboard());
+}
+
+function viewOrder(orderId) {
+    const order = getOrders().find(o => o.id === orderId);
+    if(!order) return;
+
+    const itemRows = order.items.map(i => {
+        const imgHtml = i.img
+            ? `<img src="${i.img}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;display:block;border:1px solid #e2e8f0;">`
+            : `<div style="width:60px;height:60px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
+        return `<tr>
+            <td>${imgHtml}</td>
+            <td style="font-weight:600;">${i.title}</td>
+            <td>${i.qty}</td>
+            <td>₹${i.price.toFixed(2)}</td>
+            <td style="font-weight:700;color:var(--primary);">₹${i.total}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('detailContent').innerHTML = `
+        <h2 style="margin-bottom:4px;">Order Details</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">${order.id}</p>
+        <div class="section-title">📋 Customer Information</div>
+        <div class="detail-row"><span class="detail-label">Name</span><span class="detail-val">${order.customer.name}</span></div>
+        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val">${order.customer.phone}</span></div>
+        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">${order.customer.email || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Address</span><span class="detail-val">${order.customer.address}</span></div>
+        <div class="detail-row"><span class="detail-label">Note</span><span class="detail-val">${order.customer.note || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">${order.date}</span></div>
+        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val">${order.status}</span></div>
+        <div class="section-title">🛍️ Ordered Items</div>
+        <table class="detail-items-table">
+            <thead><tr><th>Image</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
+            <tbody>${itemRows}</tbody>
+        </table>
+        <div style="text-align:right;margin-top:16px;font-size:20px;font-weight:800;">
+            Total: <span style="color:var(--primary);">₹${order.cartTotal}</span>
+        </div>
+    `;
+    document.getElementById('detailModal').classList.add('open');
+}
+
+function closeDetail() { document.getElementById('detailModal').classList.remove('open'); }
+document.getElementById('detailModal').addEventListener('click', e => { if(e.target.id==='detailModal') closeDetail(); });
+
+// ─── PRINT ORDER PDF ─────────────────────────────────────────────────────────
+// Uses EXACT same html2pdf approach as exportCartPDF in index.html (which works)
+function printOrder(orderId) {
+    const order = getOrders().find(o => o.id === orderId);
+    if(!order) return;
+
+    // Build invoice HTML — same pattern as exportCartPDF in index.html
+    let html = `
+        <h1 style="text-align:center;color:#6366f1;margin-bottom:6px;">🎌 Anime Bazaar</h1>
+        <p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">Order Invoice — ${order.id}</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px;">
+            <tr style="background:#f1f5f9;">
+                <td style="padding:8px 10px;font-weight:700;width:100px;">Customer</td>
+                <td style="padding:8px 10px;">${order.customer.name}</td>
+                <td style="padding:8px 10px;font-weight:700;width:70px;">Phone</td>
+                <td style="padding:8px 10px;">${order.customer.phone}</td>
+            </tr>
+            <tr>
+                <td style="padding:8px 10px;font-weight:700;">Address</td>
+                <td colspan="3" style="padding:8px 10px;">${order.customer.address}</td>
+            </tr>
+            <tr style="background:#f1f5f9;">
+                <td style="padding:8px 10px;font-weight:700;">Date</td>
+                <td style="padding:8px 10px;">${order.date}</td>
+                <td style="padding:8px 10px;font-weight:700;">Status</td>
+                <td style="padding:8px 10px;">${order.status}</td>
+            </tr>
+            ${order.customer.note ? `<tr><td style="padding:8px 10px;font-weight:700;">Note</td><td colspan="3" style="padding:8px 10px;">${order.customer.note}</td></tr>` : ''}
+        </table>
+        <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#6366f1;color:white;text-align:left;">
+                <th style="padding:10px;">Image</th>
+                <th style="padding:10px;">Product</th>
+                <th style="padding:10px;">Qty</th>
+                <th style="padding:10px;">Price</th>
+                <th style="padding:10px;">Subtotal</th>
+            </tr>
+    `;
+    order.items.forEach((item, n) => {
+        html += `
+            <tr style="background:${n % 2 ? '#f1f5f9' : 'white'}">
+                <td style="padding:10px;">
+                    <img src="${item.img || ''}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;">
+                </td>
+                <td style="padding:10px;font-weight:600;">${item.title}</td>
+                <td style="padding:10px;">${item.qty}</td>
+                <td style="padding:10px;">₹${item.price.toFixed(2)}</td>
+                <td style="padding:10px;font-weight:700;color:#6366f1;">₹${item.total}</td>
+            </tr>`;
+    });
+    html += `</table><h2 style="text-align:right;margin-top:20px;color:#6366f1;">Grand Total: ₹${order.cartTotal}</h2>`;
+
+    const invoice = document.createElement('div');
+    invoice.style.padding = '20px';
+    invoice.style.background = 'white';
+    invoice.style.width = '700px';
+    invoice.style.color = 'black';
+    invoice.innerHTML = html;
+
+    var opt = {
+        margin:      [0.2, 0.2, 0.2, 0.2],
+        filename:    `Order_${order.id}.pdf`,
+        image:       { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF:       { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(invoice).save();
+}
+
+function deleteOrder(orderId) {
+    if(!confirm('Delete this order permanently?')) return;
+    fetch(API + '?id=' + orderId, { method: 'DELETE' })
+        .then(() => { closeDetail(); loadDashboard(); });
+}
+
+function clearAllOrders() {
+    if(!confirm('Delete ALL orders? This cannot be undone.')) return;
+    fetch(API + '?id=all', { method: 'DELETE' })
+        .then(() => loadDashboard());
+}
+
+function exportAllCSV() {
+    const orders = getOrders();
+    if(!orders.length) { alert('No orders to export.'); return; }
+    let csv = 'Order ID,Date,Name,Phone,Email,Address,Note,Items,Total,Status\n';
+    orders.forEach(o => {
+        const items = o.items.map(i => `${i.title} x${i.qty}`).join(' | ');
+        csv += `"${o.id}","${o.date}","${o.customer.name}","${o.customer.phone}","${o.customer.email||''}","${o.customer.address}","${o.customer.note||''}","${items}","${o.cartTotal}","${o.status}"\n`;
+    });
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'AnimeBazaar_Orders.csv';
+    a.click();
+}
+    // ===== PRICE MARGIN MANAGEMENT =====
+    const MARGIN_KEY = 'animebazaar_margin';
+
+    function loadMarginUI() {
+        const saved = parseFloat(localStorage.getItem(MARGIN_KEY) || '0');
+        updateMarginLabel(saved);
+        // Highlight active preset button
+        document.querySelectorAll('.margin-btn').forEach(btn => {
+            btn.classList.remove('active');
+            const val = parseFloat(btn.getAttribute('onclick').match(/setMargin\((\d+)\)/)?.[1]);
+            if(val === saved) btn.classList.add('active');
+        });
+    }
+
+    function setMargin(pct) {
+        localStorage.setItem(MARGIN_KEY, pct);
+        updateMarginLabel(pct);
+        document.querySelectorAll('.margin-btn').forEach(btn => btn.classList.remove('active'));
+        // Find and highlight clicked button
+        document.querySelectorAll('.margin-btn').forEach(btn => {
+            const val = parseFloat(btn.getAttribute('onclick').match(/setMargin\((\d+)\)/)?.[1]);
+            if(val === pct) btn.classList.add('active');
+        });
+        showToast('✅ Margin set to ' + (pct === 0 ? 'Original (0%)' : '+' + pct + '%') + ' — store prices updated!');
+    }
+
+    function applyCustomMargin() {
+        const val = parseFloat(document.getElementById('customMarginInput').value);
+        if(isNaN(val) || val < 0) { alert('Enter a valid percentage (e.g. 12)'); return; }
+        localStorage.setItem(MARGIN_KEY, val);
+        updateMarginLabel(val);
+        document.querySelectorAll('.margin-btn').forEach(btn => btn.classList.remove('active'));
+        showToast('✅ Custom margin of +' + val + '% applied to store!');
+    }
+
+    function updateMarginLabel(pct) {
+        const label = pct === 0 ? '0% (Original)' : '+' + pct + '%';
+        document.getElementById('currentMarginLabel').innerText = label;
+    }
+
+    function showToast(msg) {
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#10b981;color:white;padding:14px 22px;border-radius:10px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 8px 20px rgba(0,0,0,0.2);transition:opacity 0.4s;';
+        t.innerText = msg;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 3000);
+    }
+
+</script>
+</body>
+</html>

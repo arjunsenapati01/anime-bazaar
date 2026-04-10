@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "buildCommand": "npm install",
+  "functions": {
+    "api/orders.js": { "memory": 512, "maxDuration": 10 }
+  },
+  "headers": [
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+      ]
+    }
+  ]
+}
