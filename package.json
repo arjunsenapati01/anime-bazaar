@@ -2,7 +2,7 @@
   "name": "wholesale-action-nook",
   "version": "1.0.0",
   "description": "Wholesale Action Nook E-commerce Store",
-  "main": "local-dev-server.js",
+  "main": "index.html",
   "scripts": {
     "dev": "node local-dev-server.js"
   },
