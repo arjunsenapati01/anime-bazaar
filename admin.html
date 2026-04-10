@@ -470,8 +470,11 @@ function viewOrder(orderId) {
     if(!order) return;
 
     const itemRows = order.items.map(i => {
-        const imgHtml = i.img
-            ? `<img src="${i.img}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;display:block;border:1px solid #e2e8f0;">`
+        let safeImg = i.img;
+        if(safeImg && safeImg.includes('vercel.app/images/')) safeImg = 'images/' + safeImg.split('images/')[1];
+        
+        const imgHtml = safeImg
+            ? `<img src="${safeImg}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;display:block;border:1px solid #e2e8f0;">`
             : `<div style="width:60px;height:60px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;">📦</div>`;
         return `<tr>
             <td>${imgHtml}</td>
@@ -510,7 +513,27 @@ document.getElementById('detailModal').addEventListener('click', e => { if(e.tar
 
 // ─── PRINT ORDER PDF ─────────────────────────────────────────────────────────
 // Uses EXACT same html2pdf approach as exportCartPDF in index.html (which works)
-function printOrder(orderId) {
+
+function getBase64Image(url) {
+    return new Promise((resolve) => {
+        if(!url) return resolve('');
+        if(url.includes('vercel.app/images/')) url = 'images/' + url.split('images/')[1];
+        let img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+            let canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg'));
+        };
+        img.onerror = () => resolve('');
+        if(url.startsWith('images/')) url = window.location.origin + '/' + url;
+        img.src = url;
+    });
+}
+
+async function printOrder(orderId) {
     const order = getOrders().find(o => o.id === orderId);
     if(!order) return;
 
@@ -546,18 +569,20 @@ function printOrder(orderId) {
                 <th style="padding:10px;">Subtotal</th>
             </tr>
     `;
-    order.items.forEach((item, n) => {
+    for(let n=0; n<order.items.length; n++) {
+        let item = order.items[n];
+        let b64 = await getBase64Image(item.img);
         html += `
             <tr style="background:${n % 2 ? '#f1f5f9' : 'white'}">
                 <td style="padding:10px;">
-                    <img src="${item.img || ''}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;">
+                    <img src="${b64}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;">
                 </td>
                 <td style="padding:10px;font-weight:600;">${item.title}</td>
                 <td style="padding:10px;">${item.qty}</td>
                 <td style="padding:10px;">₹${item.price.toFixed(2)}</td>
                 <td style="padding:10px;font-weight:700;color:#6366f1;">₹${item.total}</td>
             </tr>`;
-    });
+    }
     html += `</table><h2 style="text-align:right;margin-top:20px;color:#6366f1;">Grand Total: ₹${order.cartTotal}</h2>`;
 
     const invoice = document.createElement('div');

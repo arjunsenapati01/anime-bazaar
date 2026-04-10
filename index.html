@@ -4763,7 +4763,7 @@
             const card = btn.closest('.card');
             const title = card.querySelector('.title').innerText;
             const priceText = card.querySelector('.price').innerText;
-            const img = card.querySelector('img').src;
+            const img = card.querySelector('img').getAttribute('src');
             const priceVal = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0;
             
             const existing = cart.find(item => item.title === title);
@@ -4806,7 +4806,26 @@
             document.getElementById('cart-total-price').innerText = `₹ ${total.toFixed(2)}`;
         }
 
-        function exportCartPDF() {
+        
+        function getBase64Image(url) {
+            return new Promise((resolve, reject) => {
+                if(!url) return resolve('');
+                let img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    let canvas = document.createElement('canvas');
+                    canvas.width = img.width; canvas.height = img.height;
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = () => resolve('');
+                if(url.startsWith('images/')) url = window.location.origin + '/' + url;
+                img.src = url;
+            });
+        }
+
+        async function exportCartPDF() {
             if(cart.length === 0) { alert('Your cart is empty!'); return; }
             
             const invoice = document.createElement('div');
@@ -4824,19 +4843,20 @@
                     </tr>
             `;
             let total = 0;
-            cart.forEach(item => {
+            for(let item of cart) {
                 total += item.price * item.qty;
+                let b64 = await getBase64Image(item.img);
                 html += `
                     <tr>
                         <td style="padding:15px; border-bottom: 1px solid #e2e8f0;">
-                            <img src="${item.img}" style="width: 60px; height: 60px; border-radius: 6px; object-fit: cover;">
+                            <img src="${b64}" style="width: 60px; height: 60px; border-radius: 6px; object-fit: cover;">
                         </td>
                         <td style="padding:15px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${item.title}</td>
                         <td style="padding:15px; border-bottom: 1px solid #e2e8f0;">${item.qty}</td>
                         <td style="padding:15px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #6366f1;">₹ ${(item.price * item.qty).toFixed(2)}</td>
                     </tr>
                 `;
-            });
+            }
             html += `</table><h2 style="text-align: right; margin-top:30px;">Total: ₹ ${total.toFixed(2)}</h2>`;
             invoice.innerHTML = html;
             

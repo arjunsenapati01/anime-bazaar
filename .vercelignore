@@ -1,0 +1,5 @@
+package.json
+package-lock.json
+local-dev-server.js
+.venv
+scrape*
