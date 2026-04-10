@@ -72,6 +72,6 @@ app.delete('/api/orders/:id', (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`✅ Anime Bazaar running → http://localhost:${PORT}`);
+  console.log(`✅ Wholesale Action Nook running → http://localhost:${PORT}`);
   console.log(`🔐 Admin panel        → http://localhost:${PORT}/admin.html`);
 });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Bazaar Collections</title>
+    <title>Wholesale Action Nook Collections</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4813,7 +4813,7 @@
             invoice.style.padding = '20px'; invoice.style.background = 'white'; invoice.style.width = '700px'; invoice.style.color = 'black';
             
             let html = `
-                <h1 style="text-align:center; color:#6366f1; margin-bottom: 5px;">Anime Bazaar Invoice</h1>
+                <h1 style="text-align:center; color:#6366f1; margin-bottom: 5px;">Wholesale Action Nook Invoice</h1>
                 <p style="text-align:center; color:#666; margin-bottom: 40px;">Send this PDF via WhatsApp to place your order</p>
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                     <tr style="background:#f1f5f9; text-align:left;">
@@ -4842,7 +4842,7 @@
             
             var opt = {
               margin:       [0.2, 0.2, 0.2, 0.2],
-              filename:     'AnimeBazaar_Order.pdf',
+              filename:     'WholesaleActionNook_Order.pdf',
               image:        { type: 'jpeg', quality: 0.98 },
               html2canvas:  { scale: 2, useCORS: true },
               jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -4853,7 +4853,7 @@
         // PROFIT MARGIN % — reads from admin localStorage setting
         // =============================================
         (function applyAdminMargin() {
-            const pct = parseFloat(localStorage.getItem('animebazaar_margin') || '0');
+            const pct = parseFloat(localStorage.getItem('wholesaleactionnook_margin') || '0');
             document.querySelectorAll('.card').forEach(card => {
                 const priceEl = card.querySelector('.price');
                 if(!priceEl) return;
@@ -4898,7 +4898,7 @@
                 alert('Please fill in Name, Phone, and Address.'); return;
             }
 
-            const margin = parseFloat(localStorage.getItem('animebazaar_margin') || '0');
+            const margin = parseFloat(localStorage.getItem('wholesaleactionnook_margin') || '0');
             const order = {
                 id: 'ORD-' + Date.now(),
                 date: new Date().toLocaleString('en-IN'),

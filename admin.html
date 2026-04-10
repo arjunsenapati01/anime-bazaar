@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Bazaar — Admin Panel</title>
+    <title>Wholesale Action Nook — Admin Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -207,7 +207,7 @@
     <div class="login-box">
         <div class="login-lock">🔐</div>
         <h1>Admin Panel</h1>
-        <p>Anime Bazaar — Secure Access</p>
+        <p>Wholesale Action Nook — Secure Access</p>
         <input type="text" id="loginUser" placeholder="Username" value="">
         <input type="password" id="loginPass" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
         <button class="login-btn" onclick="doLogin()">Sign In</button>
@@ -219,7 +219,7 @@
 <div id="adminPanel">
     <nav>
         <div class="nav-brand">
-            <h1>🎌 Anime Bazaar Admin</h1>
+            <h1>🎌 Wholesale Action Nook Admin</h1>
             <span>Dashboard</span>
         </div>
         <div class="nav-actions">
@@ -335,7 +335,7 @@
 <script>
 // ===== CONFIG — CHANGE PASSWORD HERE =====
 const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'animebazaar2024';
+const ADMIN_PASS = 'wholesaleactionnook2024';
 // =========================================
 
 const API = '/api/orders';
@@ -516,7 +516,7 @@ function printOrder(orderId) {
 
     // Build invoice HTML — same pattern as exportCartPDF in index.html
     let html = `
-        <h1 style="text-align:center;color:#6366f1;margin-bottom:6px;">🎌 Anime Bazaar</h1>
+        <h1 style="text-align:center;color:#6366f1;margin-bottom:6px;">🎌 Wholesale Action Nook</h1>
         <p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">Order Invoice — ${order.id}</p>
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px;">
             <tr style="background:#f1f5f9;">
@@ -600,11 +600,11 @@ function exportAllCSV() {
     const blob = new Blob([csv], {type:'text/csv'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'AnimeBazaar_Orders.csv';
+    a.download = 'WholesaleActionNook_Orders.csv';
     a.click();
 }
     // ===== PRICE MARGIN MANAGEMENT =====
-    const MARGIN_KEY = 'animebazaar_margin';
+    const MARGIN_KEY = 'wholesaleactionnook_margin';
 
     function loadMarginUI() {
         const saved = parseFloat(localStorage.getItem(MARGIN_KEY) || '0');

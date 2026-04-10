@@ -1,7 +1,7 @@
 {
-  "name": "anime-bazaar",
+  "name": "wholesale-action-nook",
   "version": "1.0.0",
-  "description": "Anime Bazaar E-commerce Store",
+  "description": "Wholesale Action Nook E-commerce Store",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
