@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm install",
   "functions": {
     "api/orders.js": { "memory": 512, "maxDuration": 10 }
   },
