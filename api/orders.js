@@ -1,5 +1,5 @@
 // api/orders.js — Vercel Serverless Function
-// Storage: Vercel KV (production) | orders.json file (local dev via server.js)
+// Storage: GitHub Gist (production DB) | orders.json file (local dev)
 
 module.exports = async function handler(req, res) {
   // CORS
@@ -8,28 +8,47 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const KEY = 'wholesale_action_nook_orders';
-
   try {
-    // Use Vercel KV when deployed; fallback to filesystem for local dev
-    const useKV = !!process.env.KV_REST_API_URL;
-    let kv;
-    if (useKV) kv = require('@vercel/kv').kv;
+    const isCloud = !!process.env.GITHUB_TOKEN && !!process.env.GITHUB_GIST_ID;
+    const GIST_URL = isCloud ? `https://api.github.com/gists/${process.env.GITHUB_GIST_ID}` : null;
+    const authHeaders = isCloud ? {
+      'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    } : {};
 
     async function getAll() {
-      if (useKV) return (await kv.get(KEY)) || [];
-      const fs = require('fs'), path = require('path');
-      const f = path.join(process.cwd(), 'data', 'orders.json');
-      if (!require('fs').existsSync(f)) return [];
-      return JSON.parse(require('fs').readFileSync(f, 'utf8'));
+      if (isCloud) {
+        const r = await fetch(GIST_URL, { headers: authHeaders, cache: 'no-store' });
+        if (!r.ok) return [];
+        const data = await r.json();
+        const content = data.files['orders.json']?.content;
+        return content ? JSON.parse(content) : [];
+      } else {
+        const fs = require('fs'), path = require('path');
+        const f = path.join(process.cwd(), 'data', 'orders.json');
+        if (!require('fs').existsSync(f)) return [];
+        return JSON.parse(require('fs').readFileSync(f, 'utf8'));
+      }
     }
 
     async function saveAll(orders) {
-      if (useKV) { await kv.set(KEY, orders); return; }
-      const fs = require('fs'), path = require('path');
-      const dir = path.join(process.cwd(), 'data');
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, 'orders.json'), JSON.stringify(orders, null, 2));
+      if (isCloud) {
+        const r = await fetch(GIST_URL, {
+          method: 'PATCH',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            files: { 'orders.json': { content: JSON.stringify(orders, null, 2) } }
+          })
+        });
+        if (!r.ok) console.error('Gist update failed:', await r.text());
+        return;
+      } else {
+        const fs = require('fs'), path = require('path');
+        const dir = path.join(process.cwd(), 'data');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'orders.json'), JSON.stringify(orders, null, 2));
+      }
     }
 
     // GET all orders
