@@ -4,7 +4,6 @@
   "description": "Wholesale Action Nook E-commerce Store",
   "main": "local-dev-server.js",
   "scripts": {
-    "start": "node local-dev-server.js",
     "dev": "node local-dev-server.js"
   },
   "dependencies": {
