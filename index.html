@@ -4690,7 +4690,7 @@
             const pInfo = document.getElementById('page-info-af');
             const pPrev = document.getElementById('prev-btn-af');
             const pNext = document.getElementById('next-btn-af');
-            if(pInfo) pInfo.textContent = 'Page ' + page + ' of ' + afTotalPages;
+            if(pInfo) pInfo.textContent = 'Page ' + page + ' of ' + afTotalPages();
             if(pPrev) pPrev.disabled = page === 1;
             if(pNext) pNext.disabled = page === afTotalPages();
         }
