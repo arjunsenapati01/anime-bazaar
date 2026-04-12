@@ -4635,7 +4635,7 @@
             // Clear search when switching tabs
             const si = document.getElementById('searchInput');
             if(si) { si.value = ''; si.classList.remove('open'); }
-            clearSearch;
+            clearSearch();
         }
 
         const keychainCards = Array.from(document.querySelectorAll('#section-keychains .card'));
@@ -4664,7 +4664,7 @@
         function changePage(direction) { showPage(currentPage + direction); }
         
         document.querySelectorAll('.card img').forEach(img => {
-            img.onclick = => openLightbox(img.src);
+            img.onclick = () => openLightbox(img.src);
         });
 
         showPage(1);
@@ -4681,7 +4681,7 @@
 
         function showPageAF(page) {
             if (page < 1) page = 1;
-            if (page > afTotalPages) page = afTotalPages;
+            if (page > afTotalPages()) page = afTotalPages();
             afCurrentPage = page;
             afCards.forEach(c => c.style.display = 'none');
             afFilteredCards.forEach((card, i) => {
@@ -4692,7 +4692,7 @@
             const pNext = document.getElementById('next-btn-af');
             if(pInfo) pInfo.textContent = 'Page ' + page + ' of ' + afTotalPages;
             if(pPrev) pPrev.disabled = page === 1;
-            if(pNext) pNext.disabled = page === afTotalPages;
+            if(pNext) pNext.disabled = page === afTotalPages();
         }
         function changePageAF(dir) {
             showPageAF(afCurrentPage + dir);
@@ -4706,26 +4706,26 @@
         function toggleSearch() {
             const input = document.getElementById('searchInput');
             input.classList.toggle('open');
-            if(input.classList.contains('open')) input.focus;
+            if(input.classList.contains('open')) input.focus();
             else { input.value = ''; doSearch(''); }
         }
 
         function doSearch(q) {
-            q = q.trim.toLowerCase;
+            q = q.trim().toLowerCase();
             const activeTab = document.querySelector('.grid.active');
             if(!activeTab) return;
             let visible = 0;
 
             if(activeTab.id === 'section-actionfigures') {
                 afFilteredCards = afCards.filter(card => {
-                    const title = card.querySelector('.title').innerText.toLowerCase;
+                    const title = card.querySelector('.title').innerText.toLowerCase()
                     return !q || title.includes(q);
                 });
                 showPageAF(1);
                 visible = afFilteredCards.length;
             } else {
                 Array.from(activeTab.querySelectorAll('.card')).forEach(card => {
-                    const title = card.querySelector('.title').innerText.toLowerCase;
+                    const title = card.querySelector('.title').innerText.toLowerCase()
                     const show = !q || title.includes(q);
                     card.style.display = show ? 'flex' : 'none';
                     if(show) visible++;
@@ -4741,12 +4741,12 @@
         // =============================================
         // HASH-BASED TAB PERSISTENCE (survive refresh)
         // =============================================
-        (function {
+        (function() {
             const hash = window.location.hash.replace('#', '');
             if(['keychains','minifigures','actionfigures'].includes(hash)) {
                 switchTab(hash, false);
             }
-        });
+        })();
 
         function openLightbox(src) {
             document.getElementById('lightbox-img').src = src;
@@ -4810,16 +4810,16 @@
         function getBase64Image(url) {
             return new Promise((resolve, reject) => {
                 if(!url) return resolve('');
-                let img = new Image;
+                let img = new Image();
                 img.crossOrigin = 'Anonymous';
-                img.onload = => {
+                img.onload = () => {
                     let canvas = document.createElement('canvas');
                     canvas.width = img.width; canvas.height = img.height;
                     let ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
                     resolve(canvas.toDataURL('image/jpeg'));
                 };
-                img.onerror = => resolve('');
+                img.onerror = () => resolve('');
                 if(url.startsWith('images/')) url = window.location.origin + '/' + url;
                 img.src = url;
             });
@@ -4867,7 +4867,7 @@
               html2canvas:  { scale: 2, useCORS: true },
               jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf.set(opt).from(invoice).save;
+            html2pdf.set(opt).from(invoice).save();
         }
         // =============================================
         // PROFIT MARGIN % — reads from admin localStorage setting
