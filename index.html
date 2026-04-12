@@ -154,9 +154,14 @@
         .modal-overlay.open { display: flex; }
         .modal-box {
             background: white; border-radius: 16px; padding: 36px;
-            width: 460px; max-width: 95vw; box-shadow: 0 25px 50px rgba(0,0,0,0.2);
-            position: relative;
+            width: 520px; max-width: 95vw; box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            position: relative; max-height: 90vh; overflow-y: auto;
         }
+        .modal-row { display: flex; gap: 12px; }
+        .modal-row > div { flex: 1; }
+        .input-error { border-color: #ef4444 !important; }
+        .field-error { color: #ef4444; font-size: 11px; margin-top: -10px; margin-bottom: 10px; display: none; }
+        .pin-loading { font-size: 12px; color: #6366f1; margin-top: -10px; margin-bottom: 10px; }
         .modal-box h2 { margin: 0 0 20px; font-size: 22px; color: #1e293b; }
         .modal-box label { font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px; }
         .modal-box input, .modal-box textarea {
@@ -4581,16 +4586,53 @@
         <div class="modal-box">
             <button class="modal-close" onclick="closeOrderModal()">×</button>
             <h2>📦 Place Your Order</h2>
-            <label>Full Name *</label>
-            <input type="text" id="orderName" placeholder="Your full name">
-            <label>Phone Number *</label>
-            <input type="tel" id="orderPhone" placeholder="+91 98765 43210">
-            <label>Email (optional)</label>
+
+            <div class="modal-row">
+                <div>
+                    <label>First Name *</label>
+                    <input type="text" id="orderFirstName" placeholder="First name">
+                    <div class="field-error" id="errFirstName">Enter your first name</div>
+                </div>
+                <div>
+                    <label>Last Name *</label>
+                    <input type="text" id="orderLastName" placeholder="Last name">
+                    <div class="field-error" id="errLastName">Enter your last name</div>
+                </div>
+            </div>
+
+            <label>Mobile Number *</label>
+            <input type="tel" id="orderPhone" placeholder="e.g. 9876543210" maxlength="10">
+            <div class="field-error" id="errPhone">Enter a valid 10-digit Indian mobile number</div>
+
+            <label>Email *</label>
             <input type="email" id="orderEmail" placeholder="you@email.com">
+            <div class="field-error" id="errEmail">Enter a valid email address</div>
+
             <label>Delivery Address *</label>
-            <textarea id="orderAddress" placeholder="House no, Street, City, State, PIN"></textarea>
+            <textarea id="orderAddress" placeholder="House no, Street, Area"></textarea>
+            <div class="field-error" id="errAddress">Enter your delivery address</div>
+
+            <label>PIN Code *</label>
+            <input type="text" id="orderPin" placeholder="6-digit PIN code" maxlength="6" oninput="fetchPinData(this.value)">
+            <div class="field-error" id="errPin">Enter a valid 6-digit PIN code</div>
+            <div class="pin-loading" id="pinLoading" style="display:none">⏳ Fetching location…</div>
+
+            <div class="modal-row">
+                <div>
+                    <label>City *</label>
+                    <input type="text" id="orderCity" placeholder="City">
+                    <div class="field-error" id="errCity">Enter your city</div>
+                </div>
+                <div>
+                    <label>State *</label>
+                    <input type="text" id="orderState" placeholder="State">
+                    <div class="field-error" id="errState">Enter your state</div>
+                </div>
+            </div>
+
             <label>Note (optional)</label>
             <input type="text" id="orderNote" placeholder="Any special instructions...">
+
             <button class="modal-submit" onclick="submitOrder()">✅ Confirm Order</button>
         </div>
     </div>
@@ -4926,36 +4968,81 @@
         function closeOrderModal() {
             document.getElementById('orderModal').classList.remove('open');
         }
-        function submitOrder() {
-            const name    = document.getElementById('orderName').value.trim();
-            const phone   = document.getElementById('orderPhone').value.trim();
-            const email   = document.getElementById('orderEmail').value.trim();
-            const address = document.getElementById('orderAddress').value.trim();
-            const note    = document.getElementById('orderNote').value.trim();
 
-            if(!name || !phone || !address) {
-                alert('Please fill in Name, Phone, and Address.'); return;
-            }
+        function showErr(id, show) {
+            const el = document.getElementById(id);
+            if(el) el.style.display = show ? 'block' : 'none';
+            const inputId = id.replace('err','order');
+            const input = document.getElementById(inputId);
+            if(input) { if(show) input.classList.add('input-error'); else input.classList.remove('input-error'); }
+        }
+
+        function fetchPinData(pin) {
+            if(pin.length !== 6 || !/^\d{6}$/.test(pin)) return;
+            document.getElementById('pinLoading').style.display = 'block';
+            fetch('https://api.postalpincode.in/pincode/' + pin)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('pinLoading').style.display = 'none';
+                    if(data[0].Status === 'Success') {
+                        const po = data[0].PostOffice[0];
+                        document.getElementById('orderCity').value = po.District;
+                        document.getElementById('orderState').value = po.State;
+                        showErr('errPin', false);
+                    } else {
+                        document.getElementById('orderCity').value = '';
+                        document.getElementById('orderState').value = '';
+                        showErr('errPin', true);
+                        document.getElementById('errPin').textContent = 'Invalid PIN code';
+                    }
+                })
+                .catch(() => { document.getElementById('pinLoading').style.display = 'none'; });
+        }
+
+        function submitOrder() {
+            const firstName = document.getElementById('orderFirstName').value.trim();
+            const lastName  = document.getElementById('orderLastName').value.trim();
+            const phone     = document.getElementById('orderPhone').value.trim();
+            const email     = document.getElementById('orderEmail').value.trim();
+            const address   = document.getElementById('orderAddress').value.trim();
+            const pin       = document.getElementById('orderPin').value.trim();
+            const city      = document.getElementById('orderCity').value.trim();
+            const state     = document.getElementById('orderState').value.trim();
+            const note      = document.getElementById('orderNote').value.trim();
+
+            const indianMobile = /^[6-9]\d{9}$/;
+            const validEmail   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            let valid = true;
+            showErr('errFirstName', !firstName); if(!firstName) valid = false;
+            showErr('errLastName',  !lastName);  if(!lastName)  valid = false;
+            if(!indianMobile.test(phone)) { showErr('errPhone', true); valid = false; } else showErr('errPhone', false);
+            if(!validEmail.test(email))   { showErr('errEmail', true); valid = false; } else showErr('errEmail', false);
+            showErr('errAddress', !address); if(!address) valid = false;
+            if(!/^\d{6}$/.test(pin)) { showErr('errPin', true); document.getElementById('errPin').textContent = 'Enter a valid 6-digit PIN code'; valid = false; } else showErr('errPin', false);
+            showErr('errCity',  !city);  if(!city)  valid = false;
+            showErr('errState', !state); if(!state) valid = false;
+
+            if(!valid) return;
+
+            const name = firstName + ' ' + lastName;
+            const fullAddress = address + ', ' + city + ', ' + state + ' - ' + pin;
 
             const margin = parseFloat(localStorage.getItem('wholesaleactionnook_margin') || '0');
             const order = {
                 id: 'ORD-' + Date.now(),
                 date: new Date().toLocaleString('en-IN'),
-                customer: { name, phone, email, address, note },
+                customer: { name, firstName, lastName, phone, email, address: fullAddress, pin, city, state, note },
                 items: cart.map(i => ({
-                    title: i.title,
-                    qty: i.qty,
-                    price: i.price,
-                    total: (i.price * i.qty).toFixed(2),
-                    img: i.img
+                    title: i.title, qty: i.qty, price: i.price,
+                    total: (i.price * i.qty).toFixed(2), img: i.img
                 })),
                 cartTotal: cart.reduce((s,i) => s + i.price*i.qty, 0).toFixed(2),
                 marginPct: margin,
                 status: 'New'
             };
 
-            // Save order via API (server stores it in orders.json / Vercel KV)
-            const submitBtn = document.querySelector('#orderModal .submit-order-btn') || null;
+            const submitBtn = document.querySelector('#orderModal .modal-submit');
             if(submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Placing Order…'; }
 
             fetch('/api/orders', {
@@ -4967,15 +5054,14 @@
             .then(_ => {
                 cart = []; saveCart(); updateCartUI();
                 closeOrderModal(); toggleCart();
-                ['orderName','orderPhone','orderEmail','orderNote'].forEach(id => document.getElementById(id).value = '');
-                document.getElementById('orderAddress').value = '';
+                ['orderFirstName','orderLastName','orderPhone','orderEmail','orderAddress','orderPin','orderCity','orderState','orderNote'].forEach(id => document.getElementById(id).value = '');
                 alert('✅ Order placed successfully!\nOrder ID: ' + order.id);
             })
             .catch(() => {
-                alert('⚠️ Could not reach server. Please make sure the server is running.');
+                alert('⚠️ Could not reach server. Please try again.');
             })
             .finally(() => {
-                if(submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm Order'; }
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✅ Confirm Order'; }
             });
         }
 
