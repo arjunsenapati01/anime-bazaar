@@ -4859,15 +4859,23 @@
             }
             html += `</table><h2 style="text-align: right; margin-top:30px;">Total: ₹ ${total.toFixed(2)}</h2>`;
             invoice.innerHTML = html;
-            
+
+            // Must be in DOM for html2canvas to render
+            invoice.style.position = 'fixed';
+            invoice.style.left = '-9999px';
+            invoice.style.top = '0';
+            document.body.appendChild(invoice);
+
             var opt = {
               margin:       [0.2, 0.2, 0.2, 0.2],
               filename:     'WholesaleActionNook_Order.pdf',
               image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { scale: 2, useCORS: true },
+              html2canvas:  { scale: 2, useCORS: true, logging: false },
               jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(invoice).save();
+            html2pdf().set(opt).from(invoice).save().finally(() => {
+              document.body.removeChild(invoice);
+            });
         }
         // =============================================
         // PROFIT MARGIN % — reads from admin localStorage setting
