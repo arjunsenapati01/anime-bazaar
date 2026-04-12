@@ -67,6 +67,7 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       return res.json(await getConfig());
     }
     if (req.method === 'POST') {
