@@ -635,22 +635,40 @@ function exportAllCSV() {
     // ===== PRICE MARGIN MANAGEMENT =====
     const MARGIN_KEY = 'wholesaleactionnook_margin';
 
-    function loadMarginUI() {
-        const saved = parseFloat(localStorage.getItem(MARGIN_KEY) || '0');
-        updateMarginLabel(saved);
-        // Highlight active preset button
-        document.querySelectorAll('.margin-btn').forEach(btn => {
-            btn.classList.remove('active');
-            const val = parseFloat(btn.getAttribute('onclick').match(/setMargin\((\d+)\)/)?.[1]);
-            if(val === saved) btn.classList.add('active');
-        });
+    async function loadMarginUI() {
+        // Load from server
+        try {
+            const r = await fetch('/api/config');
+            const cfg = await r.json();
+            const saved = parseFloat(cfg.margin || 0);
+            localStorage.setItem(MARGIN_KEY, saved);
+            updateMarginLabel(saved);
+            document.querySelectorAll('.margin-btn').forEach(btn => {
+                btn.classList.remove('active');
+                const val = parseFloat(btn.getAttribute('onclick').match(/setMargin\((\d+)\)/)?.[1]);
+                if(val === saved) btn.classList.add('active');
+            });
+        } catch(e) {
+            const saved = parseFloat(localStorage.getItem(MARGIN_KEY) || '0');
+            updateMarginLabel(saved);
+        }
+    }
+
+    async function saveMarginToServer(pct) {
+        try {
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ margin: pct })
+            });
+        } catch(e) { console.error('Failed to save margin', e); }
     }
 
     function setMargin(pct) {
         localStorage.setItem(MARGIN_KEY, pct);
+        saveMarginToServer(pct);
         updateMarginLabel(pct);
         document.querySelectorAll('.margin-btn').forEach(btn => btn.classList.remove('active'));
-        // Find and highlight clicked button
         document.querySelectorAll('.margin-btn').forEach(btn => {
             const val = parseFloat(btn.getAttribute('onclick').match(/setMargin\((\d+)\)/)?.[1]);
             if(val === pct) btn.classList.add('active');
@@ -662,6 +680,7 @@ function exportAllCSV() {
         const val = parseFloat(document.getElementById('customMarginInput').value);
         if(isNaN(val) || val < 0) { alert('Enter a valid percentage (e.g. 12)'); return; }
         localStorage.setItem(MARGIN_KEY, val);
+        saveMarginToServer(val);
         updateMarginLabel(val);
         document.querySelectorAll('.margin-btn').forEach(btn => btn.classList.remove('active'));
         showToast('✅ Custom margin of +' + val + '% applied to store!');

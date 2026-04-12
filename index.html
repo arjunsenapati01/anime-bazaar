@@ -4877,18 +4877,19 @@
         // =============================================
         // PROFIT MARGIN % — reads from admin localStorage setting
         // =============================================
-        (function applyAdminMargin() {
-            const pct = parseFloat(localStorage.getItem('wholesaleactionnook_margin') || '0');
-            document.querySelectorAll('.card').forEach(card => {
-                const priceEl = card.querySelector('.price');
-                if(!priceEl) return;
-                const raw = parseFloat(priceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
-                priceEl.dataset.original = raw;
-                if(pct !== 0) {
-                    priceEl.innerText = '₹ ' + (raw * (1 + pct/100)).toFixed(2);
-                }
-            });
-        });
+        fetch('/api/config')
+            .then(r => r.json())
+            .then(cfg => {
+                const pct = parseFloat(cfg.margin || 0);
+                if(pct === 0) return;
+                document.querySelectorAll('.card').forEach(card => {
+                    const priceEl = card.querySelector('.price');
+                    if(!priceEl) return;
+                    const raw = parseFloat(priceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
+                    if(raw > 0) priceEl.innerText = '₹ ' + (raw * (1 + pct/100)).toFixed(2);
+                });
+            })
+            .catch(() => {});
 
         // =============================================
         // PAGE JUMP
