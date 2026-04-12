@@ -190,16 +190,16 @@
 
             <div class="search-wrapper">
                 <input class="search-input" id="searchInput" type="text" placeholder="Search products..." oninput="doSearch(this.value)">
-                <button class="search-btn" onclick="toggleSearch" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button class="search-btn" onclick="toggleSearch()" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
-            <button class="cart-btn" onclick="toggleCart">
+            <button class="cart-btn" onclick="toggleCart()">
                 <i class="fa-solid fa-cart-shopping"></i> Cart 
                 <span class="cart-count" id="cartCount">0</span>
             </button>
         </div>
     </nav>
 
-    <div id="lightbox" onclick="closeLightbox">
+    <div id="lightbox" onclick="closeLightbox()">
         <span class="close-btn">&times;</span>
         <img id="lightbox-img" src="" alt="Zoomed">
     </div>
@@ -1096,7 +1096,7 @@
             <div class="page-jump">
                 <i class="fa-solid fa-magnifying-glass" style="color:#888;font-size:12px;"></i>
                 <input type="number" id="jumpInputKC" min="1" placeholder="Go to" onkeydown="if(event.key==='Enter') jumpPageKC">
-                <button onclick="jumpPageKC">Go</button>
+                <button onclick="jumpPageKC()">Go</button>
             </div>
         </div>
 
@@ -4568,7 +4568,7 @@
             <div class="page-jump">
                 <i class="fa-solid fa-magnifying-glass" style="color:#888;font-size:12px;"></i>
                 <input type="number" id="jumpInputAF" min="1" placeholder="Go to" onkeydown="if(event.key==='Enter') jumpPageAF">
-                <button onclick="jumpPageAF">Go</button>
+                <button onclick="jumpPageAF()">Go</button>
             </div>
         </div>
 
@@ -4578,7 +4578,7 @@
     <!-- Order Modal -->
     <div class="modal-overlay" id="orderModal">
         <div class="modal-box">
-            <button class="modal-close" onclick="closeOrderModal">×</button>
+            <button class="modal-close" onclick="closeOrderModal()">×</button>
             <h2>📦 Place Your Order</h2>
             <label>Full Name *</label>
             <input type="text" id="orderName" placeholder="Your full name">
@@ -4590,14 +4590,14 @@
             <textarea id="orderAddress" placeholder="House no, Street, City, State, PIN"></textarea>
             <label>Note (optional)</label>
             <input type="text" id="orderNote" placeholder="Any special instructions...">
-            <button class="modal-submit" onclick="submitOrder">✅ Confirm Order</button>
+            <button class="modal-submit" onclick="submitOrder()">✅ Confirm Order</button>
         </div>
     </div>
 
     <div id="cart-sidebar">
         <div class="cart-header">
             <h3>Your Cart</h3>
-            <button class="close-cart" onclick="toggleCart"><i class="fa-solid fa-xmark"></i></button>
+            <button class="close-cart" onclick="toggleCart()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="cart-items" id="cart-items-container"></div>
         <div class="cart-footer">
@@ -4605,10 +4605,10 @@
                 <span>Total:</span>
                 <span id="cart-total-price">₹ 0.00</span>
             </div>
-            <button class="place-order-btn" onclick="openOrderModal">
+            <button class="place-order-btn" onclick="openOrderModal()">
                 <i class="fa-solid fa-bag-shopping"></i> Place Order
             </button>
-            <button class="export-pdf-btn" onclick="exportCartPDF" style="width:100%;padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
+            <button class="export-pdf-btn" onclick="exportCartPDF()" style="width:100%;padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:0.2s;">
                 <i class="fa-solid fa-file-pdf"></i> Download Invoice (PDF)
             </button>
         </div>
@@ -4677,7 +4677,7 @@
         let afCurrentPage = 1;
         let afFilteredCards = [...afCards];
 
-        function afTotalPages { return Math.ceil(afFilteredCards.length / afPerPage) || 1; }
+        function afTotalPages() { return Math.ceil(afFilteredCards.length / afPerPage) || 1; }
 
         function showPageAF(page) {
             if (page < 1) page = 1;
@@ -4703,7 +4703,7 @@
         // =============================================
         // SEARCH FUNCTIONALITY
         // =============================================
-        function toggleSearch {
+        function toggleSearch() {
             const input = document.getElementById('searchInput');
             input.classList.toggle('open');
             if(input.classList.contains('open')) input.focus;
@@ -4752,12 +4752,12 @@
             document.getElementById('lightbox-img').src = src;
             document.getElementById('lightbox').style.display = 'flex';
         }
-        function closeLightbox {
+        function closeLightbox() {
             document.getElementById('lightbox').style.display = 'none';
         }
 
         let cart = [];
-        function toggleCart { document.getElementById('cart-sidebar').classList.toggle('open'); }
+        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
 
         function addToCart(btn) {
             const card = btn.closest('.card');
@@ -4768,11 +4768,11 @@
             
             const existing = cart.find(item => item.title === title);
             if(existing) { existing.qty++; } else { cart.push({ title, price: priceVal, img, qty: 1 }); }
-            updateCartUI;
-            
+            updateCartUI();
+
             btn.innerText = "Added ✓";
             btn.style.background = "#10b981"; btn.style.color = "white";
-            setTimeout( => {
+            setTimeout(() => {
                 btn.innerText = "Add to Cart";
                 btn.style.background = "#f1f5f9"; btn.style.color = "#334155";
             }, 1000);
@@ -4780,10 +4780,10 @@
 
         function removeFromCart(title) {
             cart = cart.filter(item => item.title !== title);
-            updateCartUI;
+            updateCartUI();
         }
 
-        function updateCartUI {
+        function updateCartUI() {
             const container = document.getElementById('cart-items-container');
             container.innerHTML = '';
             let total = 0; let totalQty = 0;
@@ -4825,7 +4825,7 @@
             });
         }
 
-        async function exportCartPDF {
+        async function exportCartPDF() {
             if(cart.length === 0) { alert('Your cart is empty!'); return; }
             
             const invoice = document.createElement('div');
@@ -4872,7 +4872,7 @@
         // =============================================
         // PROFIT MARGIN % — reads from admin localStorage setting
         // =============================================
-        (function applyAdminMargin {
+        (function applyAdminMargin() {
             const pct = parseFloat(localStorage.getItem('wholesaleactionnook_margin') || '0');
             document.querySelectorAll('.card').forEach(card => {
                 const priceEl = card.querySelector('.price');
@@ -4888,11 +4888,11 @@
         // =============================================
         // PAGE JUMP
         // =============================================
-        function jumpPageKC {
+        function jumpPageKC() {
             const v = parseInt(document.getElementById('jumpInputKC').value);
             if(v && v > 0) { showPage(v); document.getElementById('jumpInputKC').value = ''; }
         }
-        function jumpPageAF {
+        function jumpPageAF() {
             const v = parseInt(document.getElementById('jumpInputAF').value);
             if(v && v > 0) { showPageAF(v); document.getElementById('jumpInputAF').value = ''; window.scrollTo({top:0,behavior:'smooth'}); }
         }
@@ -4900,19 +4900,19 @@
         // =============================================
         // ORDER SYSTEM (localStorage, no server)
         // =============================================
-        function openOrderModal {
+        function openOrderModal() {
             if(cart.length === 0) { alert('Your cart is empty!'); return; }
             document.getElementById('orderModal').classList.add('open');
         }
-        function closeOrderModal {
+        function closeOrderModal() {
             document.getElementById('orderModal').classList.remove('open');
         }
-        function submitOrder {
-            const name    = document.getElementById('orderName').value.trim;
-            const phone   = document.getElementById('orderPhone').value.trim;
-            const email   = document.getElementById('orderEmail').value.trim;
-            const address = document.getElementById('orderAddress').value.trim;
-            const note    = document.getElementById('orderNote').value.trim;
+        function submitOrder() {
+            const name    = document.getElementById('orderName').value.trim();
+            const phone   = document.getElementById('orderPhone').value.trim();
+            const email   = document.getElementById('orderEmail').value.trim();
+            const address = document.getElementById('orderAddress').value.trim();
+            const note    = document.getElementById('orderNote').value.trim();
 
             if(!name || !phone || !address) {
                 alert('Please fill in Name, Phone, and Address.'); return;
@@ -4920,8 +4920,8 @@
 
             const margin = parseFloat(localStorage.getItem('wholesaleactionnook_margin') || '0');
             const order = {
-                id: 'ORD-' + Date.now,
-                date: new Date.toLocaleString('en-IN'),
+                id: 'ORD-' + Date.now(),
+                date: new Date().toLocaleString('en-IN'),
                 customer: { name, phone, email, address, note },
                 items: cart.map(i => ({
                     title: i.title,
@@ -4944,25 +4944,25 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(order)
             })
-            .then(r => r.json)
-            .then( => {
-                cart = []; updateCartUI;
-                closeOrderModal; toggleCart;
+            .then(r => r.json())
+            .then(_ => {
+                cart = []; updateCartUI();
+                closeOrderModal(); toggleCart();
                 ['orderName','orderPhone','orderEmail','orderNote'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('orderAddress').value = '';
                 alert('✅ Order placed successfully!\nOrder ID: ' + order.id);
             })
-            .catch( => {
+            .catch(() => {
                 alert('⚠️ Could not reach server. Please make sure the server is running.');
             })
-            .finally( => {
+            .finally(() => {
                 if(submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm Order'; }
             });
         }
 
         // Close modal on overlay click
         document.getElementById('orderModal').addEventListener('click', function(e) {
-            if(e.target === this) closeOrderModal;
+            if(e.target === this) closeOrderModal();
         });
 
     </script>
