@@ -345,6 +345,7 @@ function doLogin() {
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value;
     if(u === ADMIN_USER && p === ADMIN_PASS) {
+        sessionStorage.setItem('wan_admin_auth', '1');
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         loadDashboard();
@@ -354,11 +355,21 @@ function doLogin() {
 }
 
 function doLogout() {
+    sessionStorage.removeItem('wan_admin_auth');
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('adminPanel').style.display = 'none';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginError').style.display = 'none';
 }
+
+// Auto-login if session exists
+(function() {
+    if(sessionStorage.getItem('wan_admin_auth') === '1') {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadDashboard();
+    }
+})();
 
 async function fetchOrders() {
     const r = await fetch(API);
