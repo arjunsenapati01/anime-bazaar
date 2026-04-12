@@ -4867,7 +4867,7 @@
               html2canvas:  { scale: 2, useCORS: true },
               jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            html2pdf.set(opt).from(invoice).save();
+            html2pdf().set(opt).from(invoice).save();
         }
         // =============================================
         // PROFIT MARGIN % — reads from admin localStorage setting
