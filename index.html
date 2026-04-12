@@ -4757,7 +4757,13 @@
             document.getElementById('lightbox').style.display = 'none';
         }
 
-        var cart = [];
+        var cart = JSON.parse(sessionStorage.getItem('wan_cart') || '[]');
+
+        function saveCart() { sessionStorage.setItem('wan_cart', JSON.stringify(cart)); }
+
+        // Restore cart UI on page load
+        document.addEventListener('DOMContentLoaded', () => { if(cart.length) updateCartUI(); });
+
         function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
 
         function addToCart(btn) {
@@ -4766,9 +4772,10 @@
             const priceText = card.querySelector('.price').innerText;
             const img = card.querySelector('img').getAttribute('src');
             const priceVal = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0;
-            
+
             const existing = cart.find(item => item.title === title);
             if(existing) { existing.qty++; } else { cart.push({ title, price: priceVal, img, qty: 1 }); }
+            saveCart();
             updateCartUI();
 
             btn.innerText = "Added ✓";
@@ -4781,6 +4788,7 @@
 
         function removeFromCart(title) {
             cart = cart.filter(item => item.title !== title);
+            saveCart();
             updateCartUI();
         }
 
@@ -4957,7 +4965,7 @@
             })
             .then(r => r.json())
             .then(_ => {
-                cart = []; updateCartUI();
+                cart = []; saveCart(); updateCartUI();
                 closeOrderModal(); toggleCart();
                 ['orderName','orderPhone','orderEmail','orderNote'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('orderAddress').value = '';
