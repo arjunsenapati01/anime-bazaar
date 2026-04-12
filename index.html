@@ -4635,7 +4635,7 @@
             // Clear search when switching tabs
             const si = document.getElementById('searchInput');
             if(si) { si.value = ''; si.classList.remove('open'); }
-            clearSearch();
+            doSearch('');
         }
 
         const keychainCards = Array.from(document.querySelectorAll('#section-keychains .card'));
@@ -4756,7 +4756,7 @@
             document.getElementById('lightbox').style.display = 'none';
         }
 
-        let cart = [];
+        var cart = [];
         function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
 
         function addToCart(btn) {
