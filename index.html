@@ -4894,8 +4894,8 @@
                     document.querySelectorAll('.card').forEach(card => {
                         const priceEl = card.querySelector('.price');
                         if(!priceEl) return;
-                        const raw = parseFloat(priceEl.innerText.replace(/[^0-9.]/g, '')) || 0;
-                        if(raw > 0) priceEl.innerText = '₹ ' + (raw * (1 + pct/100)).toFixed(2);
+                        const raw = parseFloat(priceEl.textContent.replace(/[^0-9.]/g, '')) || 0;
+                        if(raw > 0) priceEl.textContent = '₹ ' + (raw * (1 + pct/100)).toFixed(2);
                     });
                 }
             })
