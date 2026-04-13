@@ -187,10 +187,13 @@
 <body>
 
     <nav>
-        <div class="nav-links">
-            <button id="tab-keychains" class="active" onclick="switchTab('keychains')">Keychains</button>
-            <button id="tab-minifigures" onclick="switchTab('minifigures')">Mini Figures</button>
-            <button id="tab-actionfigures" onclick="switchTab('actionfigures')">Action Figures</button>
+        <div style="display:flex;align-items:center;gap:20px;">
+            <img src="images/logo.png" alt="Action Nook" style="height:44px;width:auto;object-fit:contain;">
+            <div class="nav-links">
+                <button id="tab-keychains" class="active" onclick="switchTab('keychains')">Keychains</button>
+                <button id="tab-minifigures" onclick="switchTab('minifigures')">Mini Figures</button>
+                <button id="tab-actionfigures" onclick="switchTab('actionfigures')">Action Figures</button>
+            </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
 
@@ -4895,12 +4898,15 @@
             }
 
             const now = new Date().toLocaleString('en-IN');
+            const logoB64 = await getBase64Image('images/logo.png');
+            const logoTag = logoB64 ? `<img src="${logoB64}" style="height:60px;width:auto;object-fit:contain;">` : '<strong>Action Nook</strong>';
+
             const invoiceHTML = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<title>Wholesale Action Nook — Invoice</title>
+<title>Action Nook — Invoice</title>
 <style>
   body { font-family: Arial, sans-serif; padding: 40px; color: #1e293b; }
-  h1 { text-align:center; color:#6366f1; margin-bottom:4px; }
+  .header { display:flex; align-items:center; justify-content:center; flex-direction:column; margin-bottom:8px; }
   .sub { text-align:center; color:#64748b; margin-bottom:8px; font-size:13px; }
   .date { text-align:center; color:#94a3b8; font-size:12px; margin-bottom:32px; }
   table { width:100%; border-collapse:collapse; }
@@ -4910,7 +4916,7 @@
   @media print { body { padding:20px; } }
 </style>
 </head><body>
-<h1>Wholesale Action Nook</h1>
+<div class="header">${logoTag}</div>
 <p class="sub">Invoice — Send via WhatsApp to place your order</p>
 <p class="date">${now}</p>
 <table>
